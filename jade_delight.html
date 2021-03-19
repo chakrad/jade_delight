@@ -1,0 +1,241 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<title>Jade Delight</title>
+</head>
+
+<body>
+<script language="javascript">
+
+function MenuItem(name, cost)
+{
+	this.name = name;
+	this.cost=cost;
+}
+
+menuItems = new Array(
+	new MenuItem("Chicken Chop Suey", 4.5),
+	new MenuItem("Sweet and Sour Pork", 6.25),
+	new MenuItem("Shrimp Lo Mein", 5.25),
+	new MenuItem("Moo Shi Chicken", 6.5),
+	new MenuItem("Fried Rice", 2.35)
+);
+
+function makeSelect(name, minRange, maxRange)
+{
+	var t= "";
+	t = "<select name='" + name + "' size='1'>";
+	for (j=minRange; j<=maxRange; j++)
+	   t += "<option>" + j + "</option>";
+	t+= "</select>"; 
+	return t;
+}
+</script>
+
+<h1>Jade Delight</h1>
+<form name = "infoForm">
+
+<p>First Name: <input type="text"  name='fname' /></p>
+<p class = "name">Last Name*:  <input type="text" id = 'nameid' name='lname' /></p>
+<p class = "street">Street: <input type="text"  id = 'streetid' name='street' /></p>
+<p class = "city">City: <input type="text"  id = 'cityid' name='city' /></p>
+<p class = "phone">Phone*: <input type="text" id = 'phoneid' name='phone' /></p>
+<p> 
+	<input type="radio"  name="p_or_d" value = "pickup" checked="checked"/>Pickup  
+	<input type="radio"  name="p_or_d" value = "delivery"/>
+	Delivery
+</p>
+<table border="0" cellpadding="3">
+  <tr>
+    <th>Select Item</th>
+    <th>Item Name</th>
+    <th>Cost Each</th>
+    <th>Total Cost</th>
+  </tr>
+<script language="javascript">
+
+  var s = "";
+  for (i=0; i< menuItems.length; i++)
+  {
+	  s += "<tr><td>";
+	  s += makeSelect("quan" + i, 0, 10);
+	  s += "</td><td>" + menuItems[i].name + "</td>";
+	  s += "<td> $ " + menuItems[i].cost.toFixed(2) + "</td>";
+	  s += "<td>$<input type='text' name='cost"+i+"'/></td></tr>";
+  }
+  document.writeln(s);
+</script>
+</table>
+<p>Subtotal: 
+   $<input type="text"  name='subtotal' id='subtotal' readonly />
+</p>
+<p>Mass tax 6.25%:
+  $ <input type="text"  name='tax' id="tax" readonly />
+</p>
+<p>Total: $ <input type="text"  name='total' id="total" readonly />
+</p>
+
+<input type = "button" value = "Submit Order" />
+
+</form>
+
+<script language = "javascript"> //added by me
+
+	$(document).ready(function() { 
+                
+		$(".street").hide(); 
+		$(".city").hide();
+					
+		$('input[type="radio"]').click(function() { 
+			var inputValue = $(this).attr("value"); 
+			var targetBox = $("." + inputValue);
+			$(targetBox).show(); 
+			if(inputValue == "pickup")
+			{
+				$(".street").not(targetBox).hide(); 
+				$(".city").not(targetBox).hide(); 
+			}
+			if(inputValue == "delivery")
+			{
+				$(".street").not(targetBox).show(); 
+				$(".city").not(targetBox).show();
+			}
+		});
+		
+		$('input[type="button"]').click(function() { 
+			
+			var nam = $("#nameid").val();
+			var phon = $("#phoneid").val();
+		
+			var valid = true;
+			var warning = "";
+			var letters = /[a-zA-Z]/g;
+			
+			if(nam == "")
+			{
+				valid = false;
+				warning += "Last name not inputted\n";
+			}
+			if(phon == "")
+			{
+				valid = false;
+				warning += "Phone number not inputted\n";
+			}
+			else
+			{
+				if(letters.test(phon) || phon.length != 10)
+				{
+					valid = false;
+					warning += "Phone number invalid\n";
+				}
+			}
+			
+			d = new Date();
+			day = d.getDate();
+			year = d.getFullYear();
+			hour = d.getHours();
+			minute = d.getMinutes();
+			month = d.getMonth() + 1; //giving febuary as month so adjusting
+			seconds = d.getSeconds();
+			var orderType = $("input[name='p_or_d']:checked").val();
+			if(orderType == 'delivery')
+			{
+				minute += 30;
+				
+				var st = $("#streetid").val();
+				var cty = $("#cityid").val();
+				if( st == "" || cty == "")
+				{
+					valid = false;
+					warning += "Address not inputted\n";
+				}
+				
+			}
+			else 
+			{
+				minute += 15;
+			}
+			if(minute > 60)
+			{
+				minute -= 60;
+				hour += 1;
+				if(hour == 24)
+				{
+					hour -= 24;
+					day += 1;
+				}
+			}
+			fullDay = month + "/" + day + "/" + year;
+			time = hour + ":" + minute + ":" + seconds;
+			
+			if(!valid)
+				alert(warning);
+			else 
+			{
+				message = "Thank you for your order!\n";
+				receipt = order();
+				message += "Your order consists of:\n" + receipt;
+				message += "Food estimated to be ready at " + time + " on " + fullDay;
+				message += "\nYour total cost will be $" + document.getElementById('total').value;
+				alert(message);
+			}
+			
+		});
+		
+		$('select').on('change', function() {
+			var amount = this.value;
+			var quan = this.name;
+			index = (quan[4]);
+			cost = document.getElementsByName('cost'+index);
+			totalCost= (amount * menuItems[index].cost);
+			if(totalCost > 0){
+				cost[0].value = totalCost;
+			} else if(cost[0].value > 0){
+				cost[0].value = 0;
+			}
+			
+			var subcost = findSubcost();
+			subtotal = parseFloat(subcost);
+			document.getElementById('subtotal').value = subtotal;
+			document.getElementById('tax').value = (subtotal * .0625).toFixed(2);
+			document.getElementById('total').value = (subtotal * 1.0625).toFixed(2);
+		});
+		
+		
+	});
+	
+	function findSubcost(){
+		var subtotal = 0;
+		for(i = 0 ; i < 5 ; i++)
+		{
+			cost = document.getElementsByName('cost'+i);
+			var numCost = parseFloat(cost[0].value);
+			if(!isNaN(numCost))
+				subtotal += numCost;
+		}
+		return subtotal;
+	}
+	
+	function order(){
+		var order = "";
+		for(i = 0 ; i < 5 ; i++)
+		{
+			quan = document.getElementsByName('quan'+i);
+			cost = document.getElementsByName('cost'+i);
+			if(quan[0].value != 0)
+			{
+				quan = parseFloat(quan[0].value);
+				costs = parseFloat(cost[0].value);
+				order += quan + " " + menuItems[i].name + ": $" + costs + "\n";
+			}
+		}
+		return order;
+	}
+	
+</script>
+
+
+</body>
+</html>
